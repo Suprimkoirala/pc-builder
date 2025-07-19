@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.http import HttpResponse
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from pcbuilder.auth_views import LoginView, LogoutView, MeView, MyTokenObtainPairView, RegisterView
@@ -16,7 +17,11 @@ router.register(r'vendors', VendorViewSet)
 router.register(r'components', ComponentViewSet)
 router.register(r'builds', BuildViewSet)
 
+def root_view(request):
+    return HttpResponse("Welcome to the PCB Builder API")
+
 urlpatterns = [
+    path('',root_view),
     path('admin/', admin.site.urls),              
     path('api/v1/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls')),
