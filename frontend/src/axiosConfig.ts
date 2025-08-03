@@ -1,10 +1,13 @@
 import axios from "axios";
 
 axios.defaults.baseURL = "http://localhost:8000";
+
+export default axios;
 axios.defaults.headers.common["Content-Type"] = "application/json";
 
 axios.interceptors.request.use(
   (config) => {
+    console.log('Making request to:', config.url);
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -16,7 +19,10 @@ axios.interceptors.request.use(
 
 // response interceptor: handle 401 (unauthorized)
 axios.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('Response received:', response.status, response.config.url);
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 

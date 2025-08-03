@@ -1,17 +1,10 @@
-from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MinValueValidator, RegexValidator
 from django.urls import reverse
 import json
 
-class User(AbstractUser):
-    email = models.EmailField(unique=True)
-    bio = models.TextField(blank=True)
-    avatar = models.URLField(blank=True)
-    is_pro_builder = models.BooleanField(default=False)
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+# Note: User model is handled via SQL directly, not through Django ORM
+# The User table exists in the database but is managed by our SQL classes
 
 class Category(models.Model):
     """Component categories (CPU, GPU, etc.)"""
@@ -54,7 +47,8 @@ class Component(models.Model):
 
 class Build(models.Model):
     """User-created PC configurations"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    # Note: user field references the pcbuilder_user table managed by SQL
+    user_id = models.IntegerField()  # References pcbuilder_user.id
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -67,11 +61,11 @@ class Build(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        self.total_price = sum(bc.component.price * bc.quantity for bc in self.components.all())
+        # This is handled by SQL now, but keeping for reference
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.user.username}'s {self.name}"
+        return f"Build {self.id}: {self.name}"
 
 class BuildComponent(models.Model):
     """Through table for build-component relationships"""

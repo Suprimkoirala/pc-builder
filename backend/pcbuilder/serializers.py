@@ -46,3 +46,19 @@ class BuildSerializer(serializers.ModelSerializer):
         model = Build
         fields = ['id', 'name', 'description', 'created', 'updated', 
                  'is_public', 'total_price', 'components']
+
+# serializers.py
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+
+
+class MeSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField(read_only=True)
+    email = serializers.EmailField(read_only=True)
+    bio = serializers.CharField(allow_blank=True, required=False)
+    avatar = serializers.URLField(required=False, allow_null=True)
+    is_pro_builder = serializers.BooleanField(read_only=True)

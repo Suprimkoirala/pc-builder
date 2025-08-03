@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
 
 const Header = () => {
-  const { currentUser, login, register, logout } = useAuth();
+  const { user, login, register, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [formData, setFormData] = useState({
@@ -15,30 +15,42 @@ const Header = () => {
     username: "",
     confirmPassword: "",
   });
+  const [error, setError] = useState("");
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+    setError(""); // Clear error when user types
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoginMode) {
-      await login(formData.email, formData.password);
-    } else {
-      if (formData.password !== formData.confirmPassword) {
-        alert("Passwords don't match");
-        return;
+    setError("");
+    
+    try {
+      if (isLoginMode) {
+        await login({ email: formData.email, password: formData.password });
+      } else {
+        if (formData.password !== formData.confirmPassword) {
+          setError("Passwords don't match");
+          return;
+        }
+        await register({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+        });
       }
-      await register(formData.username, formData.email, formData.password);
+      setShowAuthModal(false);
+      setFormData({ email: "", password: "", username: "", confirmPassword: "" });
+    } catch (error: any) {
+      setError(error.response?.data?.error || "Authentication failed");
     }
-    setShowAuthModal(false);
-    setFormData({ ...formData, password: "", confirmPassword: "" });
   };
 
-  const scrollToSection = (sectionId) => {
+  const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
@@ -87,9 +99,9 @@ const Header = () => {
         </nav>
 
         <div className="flex items-center space-x-4">
-          {currentUser ? (
+          {user ? (
             <div className="flex items-center space-x-4">
-              <span className="text-emerald-300">{currentUser.username}</span>
+              <span className="text-emerald-300">{user.username}</span>
               <Button
                 variant="ghost"
                 className="bg-red-400 hover:bg-red-500 text-emerald-900"
@@ -131,6 +143,11 @@ const Header = () => {
             <h2 className="text-2xl font-bold mb-4 text-center text-emerald-600">
               {isLoginMode ? "Login" : "Create Account"}
             </h2>
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                {error}
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLoginMode && (
                 <div>

@@ -1,7 +1,5 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
 from .models import (
-    User,
     Category,
     Vendor,
     Component,
@@ -10,12 +8,7 @@ from .models import (
     CompatibilityRule,
 )
 
-@admin.register(User)
-class UserAdmin(DefaultUserAdmin):
-    fieldsets = DefaultUserAdmin.fieldsets + (
-        (None, {'fields': ('bio', 'avatar', 'is_pro_builder')}),
-    )
-    list_display = ('username', 'email', 'is_staff', 'is_pro_builder')
+# Note: User admin is not needed since we're managing users via SQL directly
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -34,9 +27,9 @@ class ComponentAdmin(admin.ModelAdmin):
 
 @admin.register(Build)
 class BuildAdmin(admin.ModelAdmin):
-    list_display = ('name', 'user', 'total_price', 'created', 'is_public')
+    list_display = ('name', 'user_id', 'total_price', 'created', 'is_public')
     list_filter = ('is_public', 'created')
-    search_fields = ('name', 'user__username')
+    search_fields = ('name',)
 
 @admin.register(BuildComponent)
 class BuildComponentAdmin(admin.ModelAdmin):

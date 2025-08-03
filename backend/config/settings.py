@@ -40,16 +40,15 @@ INSTALLED_APPS = [
     'pcbuilder',
     'rest_framework', 
     'corsheaders',
+    'drf_yasg',
 ]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',  # ✅ needed for browser login
-        'rest_framework.authentication.BasicAuthentication',    # optional
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'pcbuilder.auth_backend.CustomJWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',  # Allow unauthenticated access
     ],
     'DEFAULT_RENDERER_CLASSES': [
     'rest_framework.renderers.JSONRenderer',
@@ -97,12 +96,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': '2060',
-        'HOST': 'localhost',
-        'PORT': '5433',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -150,9 +145,14 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # At the bottom of the file, under INSTALLED_APPS etc.
-AUTH_USER_MODEL = 'pcbuilder.User'
+# AUTH_USER_MODEL = 'pcbuilder.User'  # Commented out since we're using SQL directly
 
 LOGIN_REDIRECT_URL = '/api/v1/'
+
+# Custom authentication backend
+AUTHENTICATION_BACKENDS = [
+    'pcbuilder.auth_backend.SQLiteAuthBackend',
+]
 
 # Add CORS settings
 CORS_ALLOW_ALL_ORIGINS = True
