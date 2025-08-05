@@ -32,7 +32,7 @@ interface BuildSlot {
 }
 
 const PCBuilder: React.FC = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [buildSlots, setBuildSlots] = useState<BuildSlot[]>([
     {
       category: 'Case',
@@ -131,7 +131,7 @@ const PCBuilder: React.FC = () => {
 
       setBuildCompatibility(compatibility);
     } catch (error) {
-      console.error('Failed to check compatibility:', error);
+      // Handle compatibility check error silently
     }
   };
 
@@ -186,7 +186,6 @@ const PCBuilder: React.FC = () => {
 
       alert('Build saved successfully!');
     } catch (error) {
-      console.error('Failed to save build:', error);
       alert('Failed to save build. Please try again.');
     }
   };

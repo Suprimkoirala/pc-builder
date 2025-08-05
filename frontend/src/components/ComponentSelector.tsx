@@ -41,29 +41,25 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
 
   const loadCategories = async () => {
     try {
-      console.log('Loading categories...');
       const categoriesData = await categoryAPI.getAll();
-      console.log('Categories loaded:', categoriesData);
       setCategories(categoriesData);
     } catch (error) {
-      console.error('Failed to load categories:', error);
+      // Handle error silently
     }
   };
 
   const loadComponents = async () => {
     setLoading(true);
     try {
-      console.log('Loading components...');
       let componentsData: Component[];
       if (selectedCategory) {
         componentsData = await componentAPI.getByCategory(selectedCategory);
       } else {
         componentsData = await componentAPI.getAll();
       }
-      console.log('Components loaded:', componentsData);
       setComponents(componentsData);
     } catch (error) {
-      console.error('Failed to load components:', error);
+      // Handle error silently
     } finally {
       setLoading(false);
     }

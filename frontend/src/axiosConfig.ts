@@ -1,13 +1,15 @@
 import axios from "axios";
 
-axios.defaults.baseURL = "http://localhost:8000";
+// Use environment variable for API URL, fallback to localhost for development
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+axios.defaults.baseURL = API_BASE_URL;
 
 export default axios;
 axios.defaults.headers.common["Content-Type"] = "application/json";
 
 axios.interceptors.request.use(
   (config) => {
-    console.log('Making request to:', config.url);
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -20,7 +22,6 @@ axios.interceptors.request.use(
 // response interceptor: handle 401 (unauthorized)
 axios.interceptors.response.use(
   (response) => {
-    console.log('Response received:', response.status, response.config.url);
     return response;
   },
   async (error) => {

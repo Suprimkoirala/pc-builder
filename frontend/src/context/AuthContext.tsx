@@ -34,24 +34,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
-    console.log('Checking auth...');
     try {
       const token = localStorage.getItem('token');
-      console.log('Token found:', !!token);
       if (token) {
         const userData = await authAPI.getCurrentUser();
-        console.log('User data loaded:', userData);
         setUser(userData);
       }
     } catch (error: any) {
-      console.error('Auth check failed:', error);
       // Don't remove tokens on network errors, only on auth errors
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('refresh_token');
       }
     } finally {
-      console.log('Setting loading to false');
       setLoading(false);
     }
   };
@@ -63,7 +58,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('refresh_token', response.refresh);
       setUser(response.user);
     } catch (error) {
-      console.error('Login failed:', error);
       throw error;
     }
   };
@@ -75,7 +69,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('refresh_token', response.refresh);
       setUser(response.user);
     } catch (error) {
-      console.error('Registration failed:', error);
       throw error;
     }
   };
@@ -83,7 +76,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     const refreshToken = localStorage.getItem('refresh_token');
     if (refreshToken) {
-      authAPI.logout(refreshToken).catch(console.error);
+      authAPI.logout(refreshToken).catch(() => {});
     }
     localStorage.removeItem('token');
     localStorage.removeItem('refresh_token');

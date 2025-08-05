@@ -16,13 +16,10 @@ const PastBuilds = () => {
   const loadPublicBuilds = async () => {
     try {
       setLoading(true);
-      console.log('Loading public builds...');
       const publicBuilds = await publicBuildAPI.getAll();
-      console.log('Public builds loaded:', publicBuilds);
-      
       setBuilds(publicBuilds);
     } catch (error) {
-      console.error('Failed to load public builds:', error);
+      // Handle error silently
     } finally {
       setLoading(false);
     }
