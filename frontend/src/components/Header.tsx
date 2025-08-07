@@ -1,11 +1,16 @@
 "use client";
 
-import { Settings } from "lucide-react";
+import { Settings, Menu, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
 
-const Header = () => {
+interface HeaderProps {
+  onSectionChange: (section: string) => void;
+  currentSection: string;
+}
+
+const Header: React.FC<HeaderProps> = ({ onSectionChange, currentSection }) => {
   const { user, login, register, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(true);
@@ -16,6 +21,7 @@ const Header = () => {
     confirmPassword: "",
   });
   const [error, setError] = useState("");
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -73,30 +79,50 @@ const Header = () => {
 
         <nav className="hidden md:flex items-center space-x-8">
           <button
-            onClick={() => scrollToSection("past-builds")}
-            className="bg-emerald-400 hover:text-emerald-300 transition-colors"
+            onClick={() => onSectionChange('home')}
+            className={`transition-colors ${currentSection === 'home' ? 'text-emerald-300' : 'text-emerald-400 hover:text-emerald-300'}`}
+          >
+            HOME
+          </button>
+          <button
+            onClick={() => onSectionChange('guide')}
+            className={`transition-colors ${currentSection === 'guide' ? 'text-emerald-300' : 'text-emerald-400 hover:text-emerald-300'}`}
+          >
+            GUIDE
+          </button>
+          <button
+            onClick={() => {
+              onSectionChange('home');
+              setTimeout(() => scrollToSection("past-builds"), 100);
+            }}
+            className="text-emerald-400 hover:text-emerald-300 transition-colors"
           >
             PAST BUILDS
           </button>
           <button
-            onClick={() => scrollToSection("diy-resources")}
-            className="bg-emerald-400 hover:text-emerald-300 transition-colors"
+            onClick={() => onSectionChange('diy-resources')}
+            className={`transition-colors ${currentSection === 'diy-resources' ? 'text-emerald-300' : 'text-emerald-400 hover:text-emerald-300'}`}
           >
             DIY RESOURCES
           </button>
           <button
-            onClick={() => scrollToSection("builder")}
-            className="bg-emerald-400 hover:text-emerald-300 transition-colors"
+            onClick={() => {
+              onSectionChange('home');
+              setTimeout(() => scrollToSection("builder"), 100);
+            }}
+            className="text-emerald-400 hover:text-emerald-300 transition-colors"
           >
             BUILDER
           </button>
-          <button
-            onClick={() => scrollToSection("about")}
-            className="bg-emerald-400 hover:text-emerald-300 transition-colors"
-          >
-            ABOUT US
-          </button>
         </nav>
+
+        {/* Mobile menu button */}
+        <button
+          className="md:hidden text-emerald-400 hover:text-emerald-300"
+          onClick={() => setShowMobileMenu(!showMobileMenu)}
+        >
+          {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
 
         <div className="flex items-center space-x-4">
           {user ? (
@@ -135,6 +161,61 @@ const Header = () => {
           )}
         </div>
       </header>
+
+      {/* Mobile menu */}
+      {showMobileMenu && (
+        <div className="md:hidden bg-gray-900 border-t border-gray-700">
+          <div className="px-6 py-4 space-y-4">
+            <button
+              onClick={() => {
+                onSectionChange('home');
+                setShowMobileMenu(false);
+              }}
+              className={`block w-full text-left py-2 transition-colors ${currentSection === 'home' ? 'text-emerald-300' : 'text-emerald-400 hover:text-emerald-300'}`}
+            >
+              HOME
+            </button>
+            <button
+              onClick={() => {
+                onSectionChange('guide');
+                setShowMobileMenu(false);
+              }}
+              className={`block w-full text-left py-2 transition-colors ${currentSection === 'guide' ? 'text-emerald-300' : 'text-emerald-400 hover:text-emerald-300'}`}
+            >
+              GUIDE
+            </button>
+            <button
+              onClick={() => {
+                onSectionChange('home');
+                setShowMobileMenu(false);
+                setTimeout(() => scrollToSection("past-builds"), 100);
+              }}
+              className="block w-full text-left py-2 text-emerald-400 hover:text-emerald-300 transition-colors"
+            >
+              PAST BUILDS
+            </button>
+            <button
+              onClick={() => {
+                onSectionChange('diy-resources');
+                setShowMobileMenu(false);
+              }}
+              className={`block w-full text-left py-2 transition-colors ${currentSection === 'diy-resources' ? 'text-emerald-300' : 'text-emerald-400 hover:text-emerald-300'}`}
+            >
+              DIY RESOURCES
+            </button>
+            <button
+              onClick={() => {
+                onSectionChange('home');
+                setShowMobileMenu(false);
+                setTimeout(() => scrollToSection("builder"), 100);
+              }}
+              className="block w-full text-left py-2 text-emerald-400 hover:text-emerald-300 transition-colors"
+            >
+              BUILDER
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Auth Modal */}
       {showAuthModal && (

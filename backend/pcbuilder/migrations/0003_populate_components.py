@@ -45,6 +45,8 @@ def populate_components(apps, schema_editor):
         {'name': 'Crucial', 'website': 'https://crucial.com', 'logo': 'crucial.png'},
         {'name': 'Kingston', 'website': 'https://kingston.com', 'logo': 'kingston.png'},
         {'name': 'G.Skill', 'website': 'https://gskill.com', 'logo': 'gskill.png'},
+        {'name': 'Lian Li', 'website': 'https://lian-li.com', 'logo': 'lianli.png'},
+        {'name': 'Noctua', 'website': 'https://noctua.at', 'logo': 'noctua.png'},
     ]
     
     vendors = {}

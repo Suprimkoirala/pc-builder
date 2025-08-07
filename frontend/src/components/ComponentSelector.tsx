@@ -34,6 +34,11 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
   const [compatibilityLoading, setCompatibilityLoading] = useState(false);
   const [showCompatibleOnly, setShowCompatibleOnly] = useState(showOnlyCompatible);
 
+  // Update internal state when prop changes
+  useEffect(() => {
+    setShowCompatibleOnly(showOnlyCompatible);
+  }, [showOnlyCompatible]);
+
   useEffect(() => {
     if (isOpen) {
       setSelectedCategory(categorySlug || '');
@@ -48,9 +53,14 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
   }, [isOpen, selectedCategory]);
 
   useEffect(() => {
-    if (isOpen && currentBuildComponents.length > 0 && showCompatibleOnly) {
-      checkCompatibility();
-    } else {
+    if (isOpen && currentBuildComponents.length > 0 && components.length > 0) {
+      if (showCompatibleOnly) {
+        checkCompatibility();
+      } else {
+        // Still check compatibility for visual indicators, but don't filter
+        checkCompatibility();
+      }
+    } else if (currentBuildComponents.length === 0) {
       setCompatibleComponents([]);
     }
   }, [isOpen, currentBuildComponents, showCompatibleOnly, components]);
@@ -106,10 +116,22 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
     }, 100); // Small delay to show loading state
   };
 
-  const filteredComponents = (showCompatibleOnly && compatibleComponents.length > 0 ? compatibleComponents : components).filter(component =>
-    component.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    component.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredComponents = (() => {
+    let componentsToFilter = components;
+    
+    // If showing only compatible and we have compatible components, use those
+    if (showCompatibleOnly && compatibleComponents.length > 0) {
+      componentsToFilter = compatibleComponents;
+    }
+    
+    // Apply search filter
+    return componentsToFilter.filter(component =>
+      component.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      component.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  })();
+
+
 
   const handleSelect = (component: Component) => {
     onSelect(component);
@@ -222,8 +244,9 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
             </div>
           ) : (
             filteredComponents.map((component) => {
-              const isCompatible = showCompatibleOnly && compatibleComponents.length > 0 
-                ? compatibleComponents.some(c => c.id === component.id)
+              // Always check compatibility for visual indicators, regardless of filter setting
+              const isCompatible = currentBuildComponents.length > 0 
+                ? ClientCompatibilityChecker.checkComponentCompatibility(component, currentBuildComponents)
                 : true;
               
               return (

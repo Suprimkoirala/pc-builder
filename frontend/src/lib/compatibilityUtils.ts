@@ -1,10 +1,5 @@
 import type { Component } from '../types';
 
-interface CompatibilityRule {
-  rule: string;
-  condition: any;
-}
-
 export class ClientCompatibilityChecker {
   /**
    * Quick compatibility check for a component against existing build components

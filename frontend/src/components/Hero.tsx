@@ -3,7 +3,11 @@
 import { Button } from "./ui/button";
 import pcImage from "../assets/pc.png";
 
-const Hero = () => {
+interface HeroProps {
+  onSectionChange: (section: string) => void;
+}
+
+const Hero: React.FC<HeroProps> = ({ onSectionChange }) => {
   return (
     <section className="px-6 py-16 md:py-24">
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
@@ -31,6 +35,7 @@ const Hero = () => {
               size="lg"
               variant="outline"
               className="border-gray-600 text-emerald-900 hover:bg-gray-800 px-8 py-4 text-lg font-semibold bg-transparent"
+              onClick={() => onSectionChange('guide')}
             >
               GUIDE
             </Button>
