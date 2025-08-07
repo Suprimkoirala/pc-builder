@@ -88,6 +88,7 @@ const PCBuilder: React.FC = () => {
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [buildCompatibility, setBuildCompatibility] = useState<BuildCompatibilityResult | null>(null);
+  const [showOnlyCompatible, setShowOnlyCompatible] = useState(true);
 
   const [totalPrice, setTotalPrice] = useState(0);
 
@@ -316,6 +317,30 @@ const PCBuilder: React.FC = () => {
           <div className="space-y-4">
             <h3 className="text-white font-semibold text-lg mb-4">Build Statistics</h3>
             
+            {/* Settings */}
+            <Card className="bg-white/10 border-white/20">
+              <div className="p-4">
+                <h4 className="text-white font-medium mb-3">Settings</h4>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-emerald-400" />
+                    <span className="text-gray-300 text-sm">Show only compatible components</span>
+                  </div>
+                  <Button
+                    variant={showOnlyCompatible ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setShowOnlyCompatible(!showOnlyCompatible)}
+                    className="text-xs"
+                  >
+                    {showOnlyCompatible ? 'ON' : 'OFF'}
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-400 mt-2">
+                  When enabled, only components compatible with your current build will be shown during selection.
+                </p>
+              </div>
+            </Card>
+            
             {/* Component Count */}
             <Card className="bg-white/10 border-white/20">
               <div className="p-4">
@@ -387,6 +412,8 @@ const PCBuilder: React.FC = () => {
         onSelect={handleComponentSelect}
         categorySlug={selectedSlotIndex !== null ? buildSlots[selectedSlotIndex].categorySlug : undefined}
         title={selectedSlotIndex !== null ? `Select ${buildSlots[selectedSlotIndex].category}` : 'Select Component'}
+        currentBuildComponents={buildSlots.filter(slot => slot.component).map(slot => slot.component!)}
+        showOnlyCompatible={showOnlyCompatible}
       />
     </section>
   );

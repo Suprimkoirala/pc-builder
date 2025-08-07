@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, Check, AlertCircle } from 'lucide-react';
+import { X, Search, Check, AlertCircle, Filter } from 'lucide-react';
 import type { Component, Category } from '../types';
 import { componentAPI, categoryAPI } from '../services/api';
+import { ClientCompatibilityChecker } from '../lib/compatibilityUtils';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 
@@ -11,6 +12,8 @@ interface ComponentSelectorProps {
   onSelect: (component: Component) => void;
   categorySlug?: string;
   title?: string;
+  currentBuildComponents?: Component[]; // New prop for current build
+  showOnlyCompatible?: boolean; // New prop to control filtering
 }
 
 const ComponentSelector: React.FC<ComponentSelectorProps> = ({
@@ -18,13 +21,18 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
   onClose,
   onSelect,
   categorySlug,
-  title = 'Select Component'
+  title = 'Select Component',
+  currentBuildComponents = [],
+  showOnlyCompatible = true // Default to showing only compatible components
 }) => {
   const [components, setComponents] = useState<Component[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>(categorySlug || '');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [compatibleComponents, setCompatibleComponents] = useState<Component[]>([]);
+  const [compatibilityLoading, setCompatibilityLoading] = useState(false);
+  const [showCompatibleOnly, setShowCompatibleOnly] = useState(showOnlyCompatible);
 
   useEffect(() => {
     if (isOpen) {
@@ -38,6 +46,14 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
       loadComponents();
     }
   }, [isOpen, selectedCategory]);
+
+  useEffect(() => {
+    if (isOpen && currentBuildComponents.length > 0 && showCompatibleOnly) {
+      checkCompatibility();
+    } else {
+      setCompatibleComponents([]);
+    }
+  }, [isOpen, currentBuildComponents, showCompatibleOnly, components]);
 
   const loadCategories = async () => {
     try {
@@ -65,7 +81,32 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
     }
   };
 
-  const filteredComponents = components.filter(component =>
+  const checkCompatibility = () => {
+    if (currentBuildComponents.length === 0) {
+      setCompatibleComponents([]);
+      return;
+    }
+
+    setCompatibilityLoading(true);
+    
+    // Use client-side compatibility checker for better performance
+    setTimeout(() => {
+      try {
+        const compatible = ClientCompatibilityChecker.filterCompatibleComponents(
+          components,
+          currentBuildComponents
+        );
+        setCompatibleComponents(compatible);
+      } catch (error) {
+        // If compatibility checking fails, show all components
+        setCompatibleComponents(components);
+      } finally {
+        setCompatibilityLoading(false);
+      }
+    }, 100); // Small delay to show loading state
+  };
+
+  const filteredComponents = (showCompatibleOnly && compatibleComponents.length > 0 ? compatibleComponents : components).filter(component =>
     component.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     component.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -78,8 +119,9 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-lg p-6 w-full max-w-4xl max-h-[80vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
+        <div className="p-6 pb-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-white text-xl font-semibold">{title}</h2>
           <Button
@@ -91,6 +133,28 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
             <X className="w-5 h-5" />
           </Button>
         </div>
+
+        {/* Compatibility Filter Toggle */}
+        {currentBuildComponents.length > 0 && (
+          <div className="mb-4">
+            <Button
+              onClick={() => setShowCompatibleOnly(!showCompatibleOnly)}
+              variant={showCompatibleOnly ? 'default' : 'outline'}
+              size="sm"
+              className="flex items-center gap-2"
+              disabled={compatibilityLoading}
+            >
+              <Filter className="w-4 h-4" />
+              {showCompatibleOnly ? 'Show Only Compatible' : 'Show All Components'}
+              {compatibilityLoading && <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>}
+            </Button>
+            {showCompatibleOnly && compatibleComponents.length > 0 && (
+              <div className="text-sm text-emerald-400 mt-1">
+                Showing {compatibleComponents.length} compatible components out of {components.length} total
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Category Filter */}
         <div className="mb-4">
@@ -129,56 +193,87 @@ const ComponentSelector: React.FC<ComponentSelectorProps> = ({
           />
         </div>
 
+        </div>
+        
         {/* Components List */}
-        <div className="overflow-y-auto max-h-[60vh] space-y-2">
+        <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <div className="space-y-2">
           {loading ? (
             <div className="text-center py-8">
               <div className="text-white">Loading components...</div>
             </div>
+          ) : compatibilityLoading ? (
+            <div className="text-center py-8">
+              <div className="text-white">Checking compatibility...</div>
+            </div>
           ) : filteredComponents.length === 0 ? (
             <div className="text-center py-8">
               <AlertCircle className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <div className="text-gray-400">No components found</div>
+              <div className="text-gray-400">
+                {showCompatibleOnly && currentBuildComponents.length > 0 
+                  ? 'No compatible components found' 
+                  : 'No components found'}
+              </div>
+              {showCompatibleOnly && currentBuildComponents.length > 0 && (
+                <div className="text-sm text-gray-500 mt-2">
+                  Try selecting "Show All Components" to see all available options
+                </div>
+              )}
             </div>
           ) : (
-            filteredComponents.map((component) => (
-              <Card
-                key={component.id}
-                className="bg-gray-800 border-gray-700 hover:border-emerald-500 cursor-pointer transition-colors"
-                onClick={() => handleSelect(component)}
-              >
-                <div className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <img
-                          src={component.image}
-                          alt={component.name}
-                          className="w-12 h-12 object-cover rounded"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/48x48/374151/FFFFFF?text=PC';
-                          }}
-                        />
-                        <div>
-                          <h3 className="text-white font-semibold">{component.name}</h3>
-                          <p className="text-emerald-400 font-bold">${Number(component.price || 0).toFixed(2)}</p>
+            filteredComponents.map((component) => {
+              const isCompatible = showCompatibleOnly && compatibleComponents.length > 0 
+                ? compatibleComponents.some(c => c.id === component.id)
+                : true;
+              
+              return (
+                <Card
+                  key={component.id}
+                  className={`bg-gray-800 border-gray-700 hover:border-emerald-500 cursor-pointer transition-colors ${
+                    !isCompatible ? 'opacity-60 border-red-500' : ''
+                  }`}
+                  onClick={() => handleSelect(component)}
+                >
+                  <div className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <img
+                            src={component.image}
+                            alt={component.name}
+                            className="w-12 h-12 object-cover rounded"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/48x48/374151/FFFFFF?text=PC';
+                            }}
+                          />
+                          <div>
+                            <h3 className="text-white font-semibold">{component.name}</h3>
+                            <p className="text-emerald-400 font-bold">${Number(component.price || 0).toFixed(2)}</p>
+                          </div>
                         </div>
+                        <p className="text-gray-300 text-sm mb-2">{component.description}</p>
+                        <div className="flex items-center gap-4 text-xs text-gray-400">
+                          <span>{component.category_name}</span>
+                          <span>•</span>
+                          <span>{component.vendor_name}</span>
+                          <span>•</span>
+                          <span>Stock: {component.stock}</span>
+                        </div>
+                        {!isCompatible && (
+                          <div className="mt-2 text-xs text-red-400 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            May not be compatible with your current build
+                          </div>
+                        )}
                       </div>
-                      <p className="text-gray-300 text-sm mb-2">{component.description}</p>
-                      <div className="flex items-center gap-4 text-xs text-gray-400">
-                        <span>{component.category_name}</span>
-                        <span>•</span>
-                        <span>{component.vendor_name}</span>
-                        <span>•</span>
-                        <span>Stock: {component.stock}</span>
-                      </div>
+                      <Check className={`w-5 h-5 ${isCompatible ? 'text-emerald-400' : 'text-red-400'}`} />
                     </div>
-                    <Check className="w-5 h-5 text-emerald-400" />
                   </div>
-                </div>
-              </Card>
-            ))
+                </Card>
+              );
+            })
           )}
+          </div>
         </div>
       </div>
     </div>

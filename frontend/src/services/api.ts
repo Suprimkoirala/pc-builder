@@ -121,6 +121,24 @@ export const compatibilityAPI = {
   checkBuild: async (buildId: number): Promise<BuildCompatibilityResult> => {
     const response = await axios.get(`/api/v1/compatibility/?build_id=${buildId}`);
     return response.data;
+  },
+
+  // Temporary build methods for compatibility checking
+  createTempBuild: async (data: { name: string; description?: string; is_public?: boolean }): Promise<Build> => {
+    const response = await axios.post('/api/v1/builds/', data);
+    return response.data;
+  },
+
+  addComponentToBuild: async (buildId: number, componentId: number, quantity?: number, notes?: string): Promise<void> => {
+    await axios.post(`/api/v1/builds/${buildId}/components/`, {
+      component_id: componentId,
+      quantity: quantity || 1,
+      notes: notes || ''
+    });
+  },
+
+  deleteTempBuild: async (buildId: number): Promise<void> => {
+    await axios.delete(`/api/v1/builds/${buildId}/`);
   }
 };
 
